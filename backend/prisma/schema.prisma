@@ -1,0 +1,229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String            @id @default(cuid())
+  username          String            @unique
+  email             String            @unique
+  passwordHash      String
+  bio               String?           @db.Text
+  addressString     String?
+  latitude          Float?
+  longitude         Float?
+  isAddressVerified Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  zoneId            String?
+  bookingsProvided  Booking[]         @relation("BookingProvider")
+  bookingsRequested Booking[]         @relation("BookingRequester")
+  issuesAgainstUser IssueReport[]     @relation("ReportedUser")
+  issuesReported    IssueReport[]     @relation("Reporter")
+  posts             Post[]            @relation("PostAuthor")
+  dislikesGiven     ResourceDislike[] @relation("Disliker")
+  likesGiven        ResourceLike[]    @relation("Liker")
+  resources         Resource[]        @relation("ResourceOwner")
+  reviewsReceived   Review[]          @relation("RatedParty")
+  reviewsGiven      Review[]          @relation("Rater")
+  skills            Skill[]           @relation("SkillOwner")
+  zone              Zone?             @relation(fields: [zoneId], references: [id])
+
+  @@index([zoneId])
+  @@map("users")
+}
+
+model Zone {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  boundaryWKT String?    @db.Text
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  posts       Post[]
+  resources   Resource[]
+  skills      Skill[]
+  users       User[]
+
+  @@map("zones")
+}
+
+model Resource {
+  id             String            @id @default(cuid())
+  title          String
+  description    String            @db.Text
+  category       String?
+  imageUrl       String?
+  isSharable     Boolean           @default(true)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  ownerId        String
+  zoneId         String?
+  bookings       Booking[]         @relation("BookedResource")
+  issuesReported IssueReport[]     @relation("ReportedResource")
+  dislikes       ResourceDislike[]
+  likes          ResourceLike[]
+  owner          User              @relation("ResourceOwner", fields: [ownerId], references: [id])
+  zone           Zone?             @relation(fields: [zoneId], references: [id])
+
+  @@index([ownerId])
+  @@index([zoneId])
+  @@map("resources")
+}
+
+model Skill {
+  id             String        @id @default(cuid())
+  title          String
+  description    String?       @db.Text
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  ownerId        String
+  zoneId         String?
+  bookings       Booking[]     @relation("BookedSkill")
+  issuesReported IssueReport[] @relation("ReportedSkill")
+  owner          User          @relation("SkillOwner", fields: [ownerId], references: [id])
+  zone           Zone?         @relation(fields: [zoneId], references: [id])
+
+  @@index([ownerId])
+  @@index([zoneId])
+  @@map("skills")
+}
+
+model Post {
+  id             String        @id @default(cuid())
+  content        String        @db.Text
+  imageUrl       String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  authorId       String
+  zoneId         String?
+  issuesReported IssueReport[] @relation("ReportedPost")
+  author         User          @relation("PostAuthor", fields: [authorId], references: [id])
+  zone           Zone?         @relation(fields: [zoneId], references: [id])
+
+  @@index([authorId])
+  @@index([zoneId])
+  @@map("posts")
+}
+
+model Booking {
+  id             String        @id @default(cuid())
+  startDate      DateTime
+  endDate        DateTime
+  status         BookingStatus @default(PENDING)
+  requesterNotes String?       @db.Text
+  providerNotes  String?       @db.Text
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  requesterId    String
+  providerId     String
+  resourceId     String?
+  skillId        String?
+  provider       User          @relation("BookingProvider", fields: [providerId], references: [id])
+  requester      User          @relation("BookingRequester", fields: [requesterId], references: [id])
+  resource       Resource?     @relation("BookedResource", fields: [resourceId], references: [id])
+  skill          Skill?        @relation("BookedSkill", fields: [skillId], references: [id])
+  issues         IssueReport[] @relation("ReportedBooking")
+  review         Review?
+
+  @@index([requesterId])
+  @@index([providerId])
+  @@index([resourceId])
+  @@index([skillId])
+  @@index([status])
+  @@map("bookings")
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  rating       Int
+  comment      String?  @db.Text
+  createdAt    DateTime @default(now())
+  bookingId    String   @unique
+  raterId      String
+  ratedPartyId String
+  booking      Booking  @relation(fields: [bookingId], references: [id])
+  ratedParty   User     @relation("RatedParty", fields: [ratedPartyId], references: [id])
+  rater        User     @relation("Rater", fields: [raterId], references: [id])
+
+  @@index([bookingId])
+  @@index([raterId])
+  @@index([ratedPartyId])
+  @@map("reviews")
+}
+
+model IssueReport {
+  id                 String      @id @default(cuid())
+  description        String      @db.Text
+  imageUrl           String?
+  status             IssueStatus @default(OPEN)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  reporterId         String
+  bookingId          String?
+  reportedUserId     String?
+  reportedResourceId String?
+  reportedSkillId    String?
+  reportedPostId     String?
+  booking            Booking?    @relation("ReportedBooking", fields: [bookingId], references: [id])
+  reportedPost       Post?       @relation("ReportedPost", fields: [reportedPostId], references: [id])
+  reportedResource   Resource?   @relation("ReportedResource", fields: [reportedResourceId], references: [id])
+  reportedSkill      Skill?      @relation("ReportedSkill", fields: [reportedSkillId], references: [id])
+  reportedUser       User?       @relation("ReportedUser", fields: [reportedUserId], references: [id])
+  reporter           User        @relation("Reporter", fields: [reporterId], references: [id])
+
+  @@index([reporterId])
+  @@index([bookingId])
+  @@index([reportedUserId])
+  @@index([reportedResourceId])
+  @@index([reportedSkillId])
+  @@index([reportedPostId])
+  @@index([status])
+  @@map("issue_reports")
+}
+
+model ResourceLike {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  userId     String
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id])
+  user       User     @relation("Liker", fields: [userId], references: [id])
+
+  @@unique([userId, resourceId])
+  @@index([resourceId], map: "resource_likes_resourceId_fkey")
+  @@map("resource_likes")
+}
+
+model ResourceDislike {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  userId     String
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id])
+  user       User     @relation("Disliker", fields: [userId], references: [id])
+
+  @@unique([userId, resourceId])
+  @@index([resourceId], map: "resource_dislikes_resourceId_fkey")
+  @@map("resource_dislikes")
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  ISSUE_REPORTED
+}
+
+enum IssueStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
