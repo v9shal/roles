@@ -13,6 +13,7 @@ const UserInputSchema = z.object({
     //zoneId: z.string().optional(),
 });
 
+
 async function RegisterUser(input) {
     const validationResult = UserInputSchema.safeParse(input);
     if (!validationResult.success) {
@@ -100,4 +101,4 @@ async function DeleteUser(username) {
     }
 }
 
-module.exports = { RegisterUser, DeleteUser };
+module.exports = { RegisterUser, DeleteUser,Login };

@@ -33,6 +33,8 @@ model User {
   skills            Skill[]           @relation("SkillOwner")
   zone              Zone?             @relation(fields: [zoneId], references: [id])
 
+  @@index([username])
+  @@index([email])
   @@index([zoneId])
   @@map("users")
 }
