@@ -1,7 +1,6 @@
-const RegisterUser=require('../actions/user_registration_actions');
-const bcrypt = require('bcrypt');
+const {RegisterUser}=require('../actions/user_registration_actions');
 const jwt = require('jsonwebtoken');
-async function RegisterUser(req,res){
+async function Registeruser(req,res){
     try {
         const user = await RegisterUser(req.body);
         res.status(201).json(user);
@@ -113,4 +112,4 @@ async function DeleteUser(req,res){
         res.status(500).json({error: `An error occurred while deleting the user with username ${username}.`});
     }
 }
-module.exports = { RegisterUser, DeleteUser };
+module.exports = { Registeruser, DeleteUser,Login,verify };

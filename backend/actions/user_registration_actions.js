@@ -10,7 +10,7 @@ const UserInputSchema = z.object({
     latitude: z.number().optional(),
     longitude: z.number().optional(),
     isAddressVerified: z.boolean().default(false),
-    //zoneId: z.string().optional(),
+    zoneId: z.string().optional(),
 });
 
 
@@ -53,7 +53,7 @@ async function RegisterUser(input) {
                 latitude: validatedData.latitude,
                 longitude: validatedData.longitude,
                 isAddressVerified: validatedData.isAddressVerified,
-                //zoneId: validatedData.zoneId,
+                zoneId: validatedData.zoneId,
             },
         });
         console.log(`User registered successfully: ${newUser.email}`); // Add logging
@@ -101,4 +101,4 @@ async function DeleteUser(username) {
     }
 }
 
-module.exports = { RegisterUser, DeleteUser,Login };
+module.exports = { RegisterUser, DeleteUser };

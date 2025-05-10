@@ -1,13 +1,37 @@
-const {prisma}=require("@prisma/client")
+const { PrismaClient } = require('@prisma/client'); // Import the class
 const { z } = require('zod');
+
+const prisma = new PrismaClient();
 
 const SkillInputSchema = z.object({
     title: z.string().min(1, 'Title is required'),
     description: z.string().nullable(),
     ownerId: z.string(),
-    zoneId: z.string().nullable(),
+    //zoneId: z.string().nullable(),
 });
-
+async function getAllSkills(input) {
+    try {
+        const validateResult=SkillInputSchema.safeParse(input
+        );
+        if (!validateResult.success) {
+            throw new Error(
+                `Validation error: ${validateResult.error.issues
+                    .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+                    .join(', ')}`
+            );
+        }
+        const res=validateResult.data;
+        const skills = await prisma.skill.findMany({
+            where: {
+                ownerId: res.ownerId,
+            },
+        });
+        return skills;
+    } catch (error) {
+        console.error(`Error fetching all skills: ${error.message}`);
+        throw error;
+    }
+}
 async function CreateSkill(input) {
     try {
         const validateResult=SkillInputSchema.safeParse(input
@@ -124,5 +148,6 @@ module.exports={
     GetSkillByUsername,
     GetSkillById,
     DeleteSkill,
-    UpdateSkill
+    UpdateSkill,
+    getAllSkills
 }

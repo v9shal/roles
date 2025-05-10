@@ -1,20 +1,15 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-
+const resource=require('./routes/resourceRoutes');
+const userresource=require('./routes/userRoutes');
+const skillroute=require('./routes/skillRoute');
 const app = express();
 app.use(express.json());
 
-app.post('/users', async (req:any, res:any) => {
-  const { email, passwordHash, name } = req.body;
-  try {
-    const user = await prisma.user.create({
-      data: { email, passwordHash, name },
-    });
-    res.status(201).json(user);
-  } catch (error) {
-    res.status(500).json({ error: 'Something went wrong' });
-  }
-});
+app.use('/api/resources', resource);
+app.use('/api/userRegister', userresource);
+app.use('/api/skill',skillroute)
+app.get('/healthy', (req:any, res:any) => {
+  res.status(200).json({ message: 'Server is healthy' });
+})
 
 app.listen(3000, () => console.log('Server is running on port 3000'));
