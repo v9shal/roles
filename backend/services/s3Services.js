@@ -1,5 +1,5 @@
 // s3Services.js
-const { S3Client } = require('@aws-sdk/client-s3'); // Import S3Client from v3
+const { S3Client } = require('@aws-sdk/client-s3'); 
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const path = require('path');

@@ -103,6 +103,8 @@ model Post {
   updatedAt      DateTime      @updatedAt
   authorId       String
   zoneId         String?
+  likes     Int      @default(0)
+  dislikes  Int      @default(0)
   issuesReported IssueReport[] @relation("ReportedPost")
   author         User          @relation("PostAuthor", fields: [authorId], references: [id])
   zone           Zone?         @relation(fields: [zoneId], references: [id])
@@ -201,6 +203,30 @@ model ResourceLike {
   @@map("resource_likes")
 }
 
+// model PostLike {
+//   id         String   @id @default(cuid())
+//   createdAt  DateTime @default(now())
+//   userId     String
+//   postId     String
+//   post       Post     @relation(fields: [postId], references: [id])
+//   user       User     @relation("PostLiker", fields: [userId], references: [id])
+
+//   @@unique([userId, postId])
+//   @@index([postId], map: "post_likes_postId_fkey")
+//   @@map("post_likes")
+// }
+// model PostDislike {
+//   id         String   @id @default(cuid())
+//   createdAt  DateTime @default(now())
+//   userId     String
+//   postId     String
+//   post       Post     @relation(fields: [postId], references: [id])
+//   user       User     @relation("PostDisliker", fields: [userId], references: [id])
+
+//   @@unique([userId, postId])
+//   @@index([postId], map: "post_dislikes_postId_fkey")
+//   @@map("post_dislikes")
+// }
 model ResourceDislike {
   id         String   @id @default(cuid())
   createdAt  DateTime @default(now())

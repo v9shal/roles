@@ -1,6 +1,6 @@
 const {
     DeleteSkill,
-    GetAllSkills,
+    getAllSkills,
     UpdateSkill,
     CreateSkill
   } = require('../actions/skill_action');
@@ -19,7 +19,7 @@ const multer = require('multer');
       }
       
       if (req.file) {
-        req.body.imageUrl = req.file.location; // S3 URL of the uploaded file
+        req.body.imageUrl = req.file.location; 
       }
       
       next();
@@ -92,7 +92,7 @@ const multer = require('multer');
   
   async function getAllSkills(req, res) {
     try {
-      const skills = await GetAllSkills();
+      const skills = await getAllSkills();
       res.status(200).json(skills);
     } catch (error) {
       console.error("Error fetching skills:", error);
