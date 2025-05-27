@@ -6,7 +6,7 @@ const ResourceInputSchema = z.object({
     title: z.string().min(1, 'Title is required'),
     description: z.string().min(1, 'Description is required'),
     category: z.string().nullable(),
-    imageUrl: z.string().url('Invalid URL format').nullable(),
+    imageUrl: z.string().nullable(),
     isSharable: z.preprocess(
         (val) => {
             const lowerVal = String(val).toLowerCase();
@@ -19,6 +19,7 @@ const ResourceInputSchema = z.object({
 });
 
 async function CreateResource(input) {
+    console.log('Input received:', input)
     const validationResult = ResourceInputSchema.safeParse(input);
     if (!validationResult.success) {
         const errorDetails = validationResult.error.issues
@@ -30,23 +31,14 @@ async function CreateResource(input) {
 
     try {
        
-        const existingResource = await prisma.resource.findFirst({
-            where: {
-                title: res.title,
-                ownerId: res.ownerId, 
-            },
-        });
-
-        if (existingResource) {
-            throw new Error("Resource with this title already exists for this owner.");
-        }
+       
 
         const newResource = await prisma.resource.create({
             data: {
                 title: res.title,
                 description: res.description,
                 category: res.category,
-                imageUrl: res.imageUrl,
+                imageUrl: res.imageUrl ,
                 isSharable: res.isSharable,
                 //zoneId: res.zoneId,
                ownerId: res.ownerId, 

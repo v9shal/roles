@@ -13,7 +13,7 @@ const multer = require('multer');
       }
       
       if (req.file) {
-        req.body.imageUrl = req.file.location; // S3 URL of the uploaded file
+        req.body.imageUrl = req.file.location; 
       }
       
       next();
@@ -30,20 +30,20 @@ const multer = require('multer');
         res.status(500).json({ error: error.message || "Post creation failed" });
     }
   }
-  async function deletePost(req, res) {
+  async function DeletePost(req, res) {
     try {
         const { id } = req.params;
-        const deleted = await DeletePost(id);
+        const deleted = await deletePost(id);
         res.status(200).json({ message: `Post with ID ${id} deleted successfully`, post: deleted });
     } catch (error) {
         console.error("Error deleting post:", error.message);
         res.status(500).json({ error: error.message || "Post deletion failed" });
     }
   }
-  async function updatePost(req, res) {
+  async function UpdatePost(req, res) {
     try {
         const { id } = req.params;
-        const updated = await UpdatePost(id, req.body);
+        const updated = await updatePost(id, req.body);
         res.status(200).json({ message: `Post updated successfully`, post: updated });
     } catch (error) {
         console.error("Error updating post:", error.message);
@@ -60,9 +60,9 @@ const multer = require('multer');
         res.status(500).json({ error: error.message || "Post retrieval failed" });
     }
   }
-    async function getAllPosts(req, res) {
+    async function GetAllPosts(req, res) {
         try {
-            const posts = await GetAllPosts();
+            const posts = await getAllPosts();
             res.status(200).json(posts);
         } catch (error) {
             console.error("Error retrieving posts:", error.message);
@@ -102,10 +102,10 @@ const multer = require('multer');
     module.exports = {
         registerPost,
         handleFileUpload,
-        deletePost,
-        updatePost,
+        DeletePost,
+        UpdatePost,
         getPostById,
-        getAllPosts,
+        GetAllPosts,
         getPostsByAuthorId,
         getPostsByZoneId,
         GetPostsByUsername

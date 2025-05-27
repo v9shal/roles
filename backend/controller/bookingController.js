@@ -1,12 +1,11 @@
 const bookingService = require('./bookingService'); 
-const { z } = require('zod');
 
 class BookingController {
   /**
    * @param {Object} req 
    * @param {Object} res 
    */
-  async getAllBookings(req, res) {
+  async GetAllBookings(req, res) {
     try {
       const bookings = await bookingService.getAllBookings();
       return res.status(200).json({
@@ -28,7 +27,7 @@ class BookingController {
    * @param {Object} req 
    * @param {Object} res 
    */
-  async getBookingById(req, res) {
+  async GetBookingById(req, res) {
     try {
       const { id } = req.params;
       
@@ -65,7 +64,7 @@ class BookingController {
    * @param {Object} req 
    * @param {Object} res 
    */
-  async getBookingsByRequesterId(req, res) {
+  async GetBookingsByRequesterId(req, res) {
     try {
       const { requesterId } = req.params;
       
@@ -104,7 +103,7 @@ class BookingController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async getBookingsByProviderId(req, res) {
+  async GetBookingsByProviderId(req, res) {
     try {
       const { providerId } = req.params;
       
@@ -143,7 +142,7 @@ class BookingController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async getBookingsByResourceId(req, res) {
+  async GetBookingsByResourceId(req, res) {
     try {
       const { resourceId } = req.params;
       
@@ -182,7 +181,7 @@ class BookingController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async getBookingsBySkillId(req, res) {
+  async GetBookingsBySkillId(req, res) {
     try {
       const { skillId } = req.params;
       
@@ -220,7 +219,7 @@ class BookingController {
    * @param {Object} req 
    * @param {Object} res 
    */
-  async createBookingFromRequester(req, res) {
+  async CreateBookingFromRequester(req, res) {
     try {
       const bookingData = req.body;
       
@@ -271,7 +270,7 @@ class BookingController {
    * @param {Object} req 
    * @param {Object} res 
    */
-  async createBookingFromProvider(req, res) {
+  async AcceptBookingFromProvider(req, res) {
     try {
       const bookingData = req.body;
       
@@ -289,13 +288,13 @@ class BookingController {
         bookingData.endDate
       );
       
-      const booking = await bookingService.createBookingfromProvider(bookingData);
+      const booking = await bookingService.createBookingfromRequester(bookingData);
       return res.status(201).json({
         success: true,
         data: booking
       });
     } catch (error) {
-      console.error(`Error creating booking from provider: ${error.message}`);
+      console.error(`Error accepting booking from provider: ${error.message}`);
       
       if (error.message.includes('Validation error')) {
         return res.status(400).json({
@@ -313,7 +312,7 @@ class BookingController {
       
       return res.status(500).json({
         success: false,
-        message: error.message || 'Failed to create booking'
+        message: error.message || 'Failed to accept booking'
       });
     }
   }
@@ -322,7 +321,7 @@ class BookingController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async updateBooking(req, res) {
+  async UpdateBooking(req, res) {
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -394,7 +393,7 @@ class BookingController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async updateBookingStatus(req, res) {
+  async UpdateBookingStatus(req, res) {
     try {
       const { id } = req.params;
       const { status, providerNote } = req.body;
@@ -446,7 +445,7 @@ class BookingController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async cancelBooking(req, res) {
+  async CancelBooking(req, res) {
     try {
       const { id } = req.params;
       
@@ -484,7 +483,7 @@ class BookingController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async deleteBooking(req, res) {
+  async DeleteBooking(req, res) {
     try {
       const { id } = req.params;
       
@@ -521,7 +520,7 @@ class BookingController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async searchBookings(req, res) {
+  async SearchBookings(req, res) {
     try {
       const { startDate, endDate, status, resourceId } = req.query;
       
@@ -565,7 +564,7 @@ class BookingController {
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object
    */
-  async getBookingHistory(req, res) {
+  async GetBookingHistory(req, res) {
     try {
       const { userId } = req.params;
       
