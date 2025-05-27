@@ -12,11 +12,12 @@ const s3Client = new S3Client({
   }
 });
 
+// s3Services.js
 const uploadToS3 = multer({
   storage: multerS3({
     s3: s3Client, 
     bucket: process.env.AWS_S3_BUCKET_NAME,
-    //acl: 'public-read', 
+    //acl: 'public-read', // Uncomment this to make uploaded files publicly accessible
     metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname });
     },

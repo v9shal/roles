@@ -90,7 +90,7 @@ const multer = require('multer');
     }
   }
   
-  async function getAllSkills(req, res) {
+  async function GetAllSkills(req, res) {
     try {
       const skills = await getAllSkills();
       res.status(200).json(skills);
@@ -124,7 +124,7 @@ const multer = require('multer');
   module.exports = {
     registerSkill,
     deleteSkill,
-    getAllSkills,
+    GetAllSkills,
     updateSkill,
     GetSkillById,
     GetSkillByUsername,handleFileUpload };

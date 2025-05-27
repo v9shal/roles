@@ -3,10 +3,10 @@ const prisma=new PrismaClient();
 const {z, any} = require('zod');
 
 const PostInputSchema = z.object({
-    content: z.string().min(0),
+    content: z.string().min(0).default(0).nullable(),
     imageUrl: z.string().url('Invalid URL format').nullable(),
-    authorId: x.string(),
-    zoneId: z.string().nullable(),
+    authorId: z.string(),
+    //zoneId: z.string().nullable().optional(),
 });
 async function incrementLikes(postId) {
     try {
@@ -49,7 +49,7 @@ async function CreatePost(input) {
                 content: res.content,
                 imageUrl: res.imageUrl,
                 authorId: res.authorId,
-                zoneId: res.zoneId,
+             //  zoneId: res.zoneId,
             },
         })
         console.log(`Post created successfully: ID ${post.id}, Content: ${post.content}`);

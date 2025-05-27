@@ -10,7 +10,7 @@ class BookingService {
         message: "endDate must be after startDate",
       }),
       resourceId: z.string(),
-      status: z.enum(['PENDING', 'CONFIRMED', 'CANCELLED']).default('PENDING'),
+      status: z.enum(['PENDING', 'CONFIRMED', 'CANCELLED', 'REJECTED']).default('PENDING'),
       requesterNote: z.string().nullable(),
       providerNote: z.string().nullable(),
       requesterId: z.string(),
@@ -22,7 +22,7 @@ class BookingService {
       startDate: z.date().optional(),
       endDate: z.date().optional(),
       resourceId: z.string().optional(),
-      status: z.enum(['PENDING', 'CONFIRMED', 'CANCELLED']).optional(),
+      status: z.enum(['PENDING', 'CONFIRMED', 'CANCELLED', 'REJECTED']).optional(),
       requesterNote: z.string().nullable().optional(),
       providerNote: z.string().nullable().optional(),
       requesterId: z.string().optional(),
@@ -31,14 +31,15 @@ class BookingService {
     });
   }
 
-  async checkForConflicts(resourceId, startDate, endDate) {
+  async checkForConflicts(resourceId, startDate, endDate, excludeBookingId = null) {
     const conflicts = await prisma.booking.findMany({
       where: {
         resourceId,
-        status: { not: 'CANCELLED' },
+        status: { in: ['PENDING', 'CONFIRMED'] },
         OR: [
           { startDate: { lte: endDate }, endDate: { gte: startDate } },
         ],
+        ...(excludeBookingId && { NOT: { id: excludeBookingId } }),
       },
     });
     if (conflicts.length > 0) {
@@ -51,6 +52,21 @@ class BookingService {
       const booking = await prisma.booking.update({
         where: { id },
         data: { status: 'CANCELLED' },
+      });
+      return booking;
+    } catch (error) {
+      this.handlePrismaError(error, id);
+    }
+  }
+
+  async rejectBooking(id, providerNote) {
+    try {
+      const booking = await prisma.booking.update({
+        where: { id },
+        data: { 
+          status: 'REJECTED',
+          providerNote: providerNote || 'Request rejected by provider' 
+        },
       });
       return booking;
     } catch (error) {
@@ -79,7 +95,7 @@ class BookingService {
   }
 
   async updateBookingStatus(id, status, providerNote) {
-    if (!['CONFIRMED', 'CANCELLED'].includes(status)) {
+    if (!['CONFIRMED', 'CANCELLED', 'REJECTED'].includes(status)) {
       throw new Error('Invalid status update');
     }
     const booking = await prisma.booking.update({
@@ -89,7 +105,7 @@ class BookingService {
     return booking;
   }
 
-  async createBookingfromRequester(input) {
+  async createBookingFromRequester(input) {
     const validationResult = this.BookingInputSchema.safeParse(input);
     if (!validationResult.success) {
       const errorDetails = validationResult.error.issues
@@ -104,10 +120,11 @@ class BookingService {
           startDate: res.startDate,
           endDate: res.endDate,
           resourceId: res.resourceId,
-          status: res.status,
+          status: 'PENDING', // Always start as PENDING when created by requester
           requesterNote: res.requesterNote,
           requesterId: res.requesterId,
           providerId: res.providerId,
+          skillId: res.skillId,
         },
       });
       return booking;
@@ -120,34 +137,67 @@ class BookingService {
     }
   }
 
-  async createBookingfromProvider(input) {
-    const validationResult = this.BookingInputSchema.safeParse(input);
-    if (!validationResult.success) {
-      const errorDetails = validationResult.error.issues
-        .map((issue) => `${issue.path.join('.') || 'input'}: ${issue.message}`)
-        .join('; ');
-      throw new Error(`Validation error: ${errorDetails}`);
-    }
-    const res = validationResult.data;
+  async checkForProviderAvailability(providerId, startDate, endDate, excludeBookingId = null) {
     try {
-      const booking = await prisma.booking.create({
-        data: {
-          startDate: res.startDate,
-          endDate: res.endDate,
-          resourceId: res.resourceId,
-          status: res.status,
-          providerNote: res.providerNote,
-          requesterId: res.requesterId,
-          providerId: res.providerId,
+      const bookings = await prisma.booking.findMany({
+        where: {
+          providerId: providerId,
+          status: { in: ['PENDING', 'CONFIRMED'] },
+          OR: [
+            { startDate: { lte: endDate }, endDate: { gte: startDate } },
+          ],
+          ...(excludeBookingId && { NOT: { id: excludeBookingId } }),
         },
       });
-      return booking;
+      return bookings.length === 0; // Returns true if provider is available
     } catch (error) {
-      if (error.code === 'P2002') {
-        throw new Error(`A booking with similar attributes already exists (Constraint: ${error.meta.target.join(', ')}).`);
-      } else {
-        throw new Error(`Error creating booking: ${error.message}`);
+      throw new Error(`Error checking for provider availability: ${error.message}`);
+    }
+  }
+
+  async acceptBookingRequest(id, providerNote) {
+    try {
+      const booking = await prisma.booking.findUnique({
+        where: { id },
+      });
+      
+      if (!booking) {
+        throw new Error(`Booking with ID ${id} not found`);
       }
+      
+      if (booking.status !== 'PENDING') {
+        throw new Error(`Cannot accept a booking that is not in PENDING status. Current status: ${booking.status}`);
+      }
+      
+      await this.checkForConflicts(
+        booking.resourceId,
+        booking.startDate,
+        booking.endDate,
+        id 
+      );
+      
+      const isProviderAvailable = await this.checkForProviderAvailability(
+        booking.providerId,
+        booking.startDate,
+        booking.endDate,
+        id 
+      );
+      
+      if (!isProviderAvailable) {
+        throw new Error(`Provider is not available during the requested time period`);
+      }
+      
+      const updatedBooking = await prisma.booking.update({
+        where: { id },
+        data: {
+          status: 'CONFIRMED',
+          providerNote: providerNote || 'Booking confirmed by provider',
+        },
+      });
+      
+      return updatedBooking;
+    } catch (error) {
+      throw new Error(`Error accepting booking request: ${error.message}`);
     }
   }
 
